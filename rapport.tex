@@ -1,0 +1,57 @@
+\documentclass{article}
+
+\usepackage[myheadings]{fullpage}
+\usepackage[french]{babel}
+\usepackage{fancyhdr}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{float}
+
+\newcommand{\titleinfo}{[INFO0054] Programmation Fonctionnelle}
+\title{Programmation Fonctionnelle - Loi de Zipf}
+\author{Benoît Dardenne}
+\date{Avril 2013}
+
+\pagestyle{fancy}
+
+\lhead{Benoît Dardenne \\ 3\textsuperscript{ème} Bac. Sc. Info.}
+\rhead{Avril 2013 \\ \titleinfo}
+
+\begin{document}
+\maketitle
+
+
+\subsection*{Structures de données}
+
+\paragraph{} Une structure de données assez adaptée au genre de manipulations demandées ici est le \emph{trie}.\\
+Pour ce travail, j'ai choisi de représenter un trie comme une liste de nœuds, 
+et un nœud comme une liste 
+composée d'un caractère (appelé \emph{clef}), d'un entier (appelé \emph{valeur}) et d'un trie. 
+Pour chaque nœud, l'entier associé associer correspond
+au nombre de chaînes contenues dans le trie passant par ce nœud, et le trie associé est un trie 
+contenant toutes les chaînes commençant par le catactère \emph{clef}. 
+Ainsi, pour un chemin de nœuds dont les clefs sont \verb#s#, \verb#h# et \verb#e# 
+la valeur associée à la clef \verb#e# donne le nombre de chaînes ayant pour préfixe \verb#she#
+qui sont contenues dans le trie.
+Pour dénoter un mot qui serait préfixe d'un autre (par exemple ``she'' et ``shells'') on utilise une
+valeur-drapeau, ici \verb#eol#, indiquant une fin de mot.
+
+\begin{figure}[H]
+   \centering
+   \includegraphics{stgraph.png}
+   \label{fig:trie}
+   \caption{Exemple de trie après insertions successives des mots : ``She sells sea shells by the sea shore"}
+\end{figure}
+
+\paragraph{} En insérant ainsi tous les mots d'un texte donné dans un trie, il suffit de parcourir ce trie et,
+pour chaque nœud dont la clef est \verb#eol#, la valeur donne le nombre d'occurences d'un mot, déterminé 
+par le chemin parcouru pour atteindre ce nœud. 
+
+
+
+\end{document}
+
