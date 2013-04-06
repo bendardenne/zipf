@@ -9,8 +9,7 @@
          (cond
             ((eof-object? c) c)
             ((and (char? c) (char-alphabetic? c)) (cons (char-downcase c) (read-word in)))
-            (else '())
-         ))))
+            (else '())))))
 
 ; Un trie est une liste d'un nombre quelconque de trieNodes.
 ; Un trieNode est une liste d'exactement trois éléments (c n t) tels que
@@ -20,7 +19,7 @@
 
 
 ; Si word est un mot, représenté comme une liste de caractères
-; et trie est un trie, renvoit ce trie, dans lequel on a inséré le mot
+; et trie est un trie, renvoit ce trie, dans lequel on a inséré le mot.
 
 (define insert-word
    (lambda (word trie)
@@ -31,56 +30,61 @@
             (let ((node (car trie)))
                (if (equal? (car word) (car node))
                   (cons (list (car node) (+ 1 (cadr node)) (insert-word (cdr word) (caddr node))) (cdr trie))
-                  (cons node (insert-word word (cdr trie))))))
-      )))
+                  (cons node (insert-word word (cdr trie)))))))))
 
 
 
 ; Renvoit une paire pointée dont le car est le nombre de mots contenus dans le fichier in
-; et le cdr un trie contenant le nombre d'occurences pour chaque mots du fichier.
+; et le cdr un trie contenant chaque mot du fichier.
 
 (define file-to-trie (lambda (in) (file-to-trie* in 0 '())))
 
 
-; Si in est un fichier, count un entier et trie un trie contenant "count" mots issus de in,
-; renvoit une paire pointée indentique à celle décrite pour file-to-trie.
+; Si in est un fichier, count un entier et trie un trie,
+; renvoit une paire pointée dont le car est la somme de count et du nombre de mots contenus dans in
+; et le cdr est le trie fourni en entrée dans lequel sont insérés tous les mots contenus dans in.
 
 (define file-to-trie*
    (lambda (in count trie)
       (let ((word (read-word in)))
          (cond
             ((eof-object? word) (cons count trie))
-            ((eq? '() word) (file-to-trie* in count trie))
-            (else (file-to-trie* in (+ 1 count) (insert-word (append word '(eol)) trie)))
-         ))))
+            ((eq? '() word) (file-to-trie* in count trie))     ; read-word renvoit des '(), on les ignore
+            (else (file-to-trie* in (+ 1 count) (insert-word (append word '(eol)) trie)))))))
 
-(define get-top-100
+
+; Si trie est un trie, renvoit une liste de paires pointées triées selon leur car entiers
+;
+
+(define trie-to-list
    (lambda (trie)
-      (get-top-100* trie '() '())))
+      (trie-to-list* trie '() '())))
 
-(define get-top-100*
+; Si trie est un trie, word une liste de caractères et top une liste
+; de mots, renvoit
+
+(define trie-to-list*
    (lambda (trie word top)
       (if (null? trie)
          top
-         (let ((node (car trie)) (newword (append word (list (car (car trie))))))
+         (let* ((node (car trie)) (newword (append word (list (car node)))))
             (cond
-               ((eq? 'eol (car node)) (insert-top-100 (cons (cadr node) (list->string word)) 1 top))
-               (else (get-top-100* (cdr trie) word (get-top-100* (caddr node) newword top))
-            ))))))
+               ((eq? 'eol (car node)) (insert-sorted (cons (cadr node) (list->string word)) top))
+               (else (trie-to-list* (cdr trie) word (trie-to-list* (caddr node) newword top))))))))
 
-(define insert-top-100
-   (lambda (word pos ls)
+; si word est une paire pointée dont le premier élément est un réel, n un entier
+; et ls une liste de paires pointées triées par ordre décroissant selon leur car réels,
+; renvoit cette même liste auquel word a été ajouté si sa valeur est inférieure à celle du
+; n-ième élément de ls.
+
+(define insert-sorted
+   (lambda (word ls)
       (cond
          ((null? ls) (list word))
          ((< (car (car ls)) (car word)) (cons word ls))
-         (else (cons (car ls) (insert-top-100 word (+ 1 pos) (cdr ls)))))))
-
-(define print-100
-   (lambda (ls pos)
-      (if (> pos 100)
-         '()
-         (cons (car ls) (print-100 (cdr ls))))))
+         ((cons (car ls) (insert-sorted word (cdr ls)))))))
 
 ;DEBUG
-(define a (file-to-trie file))
-(define b (get-top-100 (cdr a)))
+(define trie (file-to-trie file))
+(define words (trie-to-list (cdr trie)))
+(display (take words 100))
