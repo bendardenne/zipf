@@ -34,34 +34,37 @@
 
 
 
-; Renvoit une paire pointée dont le car est le nombre de mots contenus dans le fichier in
-; et le cdr un trie contenant chaque mot du fichier.
+; Renvoit une paire pointée dont le car un trie contenant chaque mot du fichier et sa fréquence d'apparition
+; et le cdr est le nombre de mots contenus dans le fichier in.
 
 (define file-to-trie (lambda (in) (file-to-trie* in 0 '())))
 
 
 ; Si in est un fichier, count un entier et trie un trie,
-; renvoit une paire pointée dont le car est la somme de count et du nombre de mots contenus dans in
-; et le cdr est le trie fourni en entrée dans lequel sont insérés tous les mots contenus dans in.
+; renvoit une paire pointée dont le car est le trie fourni en entrée dans lequel
+; sont insérés tous les mots contenus dans in et le cdr est la somme de count et du nombre de mots
+; contenus dans in.
 
 (define file-to-trie*
    (lambda (in count trie)
       (let ((word (read-word in)))
          (cond
-            ((eof-object? word) (cons count trie))
+            ((eof-object? word) (cons trie count))
             ((eq? '() word) (file-to-trie* in count trie))     ; read-word renvoit des '(), on les ignore
             (else (file-to-trie* in (+ 1 count) (insert-word (append word '(eol)) trie)))))))
 
 
-; Si trie est un trie, renvoit une liste de paires pointées triées selon leur car entiers
-;
+; Si trie est un trie, renvoit une liste de paires pointées dont le car est un mot du trie,
+; le cdr le nombre d'occurences de ce mot dans le trie, et triées dans l'ordre décroissant selon ce nombre.
 
 (define trie-to-list
    (lambda (trie)
       (trie-to-list* trie '() '())))
 
-; Si trie est un trie, word une liste de caractères et top une liste
-; de mots, renvoit
+; Si trie est un trie, word une liste de caractères et top une liste de paires pointées triées dans l'ordre
+; décroissant selon leur car, renvoit cette liste dans laquelle sont insérées des paires pointées dont
+; les car sont toutes les concaténations possibles de word et des mots contenus dans le trie
+; et les cdr les cdr les fréquences d'apparitions associées à ces mots du trie.
 
 (define trie-to-list*
    (lambda (trie word top)
@@ -69,7 +72,7 @@
          top
          (let* ((node (car trie)) (newword (append word (list (car node)))))
             (cond
-               ((eq? 'eol (car node)) (insert-sorted (cons (cadr node) (list->string word)) top))
+               ((eq? 'eol (car node)) (insert-sorted (cons (list->string word) (cadr node)) top))
                (else (trie-to-list* (cdr trie) word (trie-to-list* (caddr node) newword top))))))))
 
 ; si word est une paire pointée dont le premier élément est un réel, n un entier
@@ -81,10 +84,10 @@
    (lambda (word ls)
       (cond
          ((null? ls) (list word))
-         ((< (car (car ls)) (car word)) (cons word ls))
+         ((< (cdr (car ls)) (cdr word)) (cons word ls))
          ((cons (car ls) (insert-sorted word (cdr ls)))))))
 
 ;DEBUG
 (define trie (file-to-trie file))
-(define words (trie-to-list (cdr trie)))
+(define words (trie-to-list (car trie)))
 (display (take words 100))
