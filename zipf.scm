@@ -1,5 +1,5 @@
-(define file (open-input-file "pg4300.txt"))   ; FIXME
-;(define file (open-input-file "simpletest"))   ; FIXME
+(require plot)
+(plot-new-window? #t)
 
 ; Renvoit le mot suivant à lire dans in, converti en minuscule.
 ; Si le curseur de in est à la fin du fichier, renvoit eof.
@@ -84,10 +84,29 @@
    (lambda (word ls)
       (cond
          ((null? ls) (list word))
-         ((< (cdr (car ls)) (cdr word)) (cons word ls))
+         ((< (cdar ls) (cdr word)) (cons word ls))
          ((cons (car ls) (insert-sorted word (cdr ls)))))))
 
+; Si ls est une liste de paires pointées et n un entier, renvoit la même liste de paires pointées
+; dont les car sont remplacés par une suite croissante démarrant à n.
+(define enumerate-pairs
+   (lambda (ls n)
+      (if (null? ls) '()
+         (cons (list n (cdar ls)) (enumerate-pairs (cdr ls) (+ n 1))))))
+
 ;DEBUG
+(define file (open-input-file "pg4300.txt"))
+;(define file (open-input-file "simpletest"))
+
 (define trie (file-to-trie file))
 (define words (trie-to-list (car trie)))
+
+
 (display (take words 100))
+
+(parameterize (
+      [plot-x-transform log-transform] [plot-x-ticks (log-ticks)]
+      [plot-y-transform log-transform] [plot-y-ticks (log-ticks)]
+      [plot-x-label "Rang du mot"]
+      [plot-y-label "Fréquence du mot"] )
+   (plot (points (enumerate-pairs words 1))))
