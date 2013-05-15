@@ -1,14 +1,15 @@
-(require plot)
-(plot-new-window? #t)
+;; Benoit Dardenne / Bac. 3 Sc. Info. / 2012-2013
+;; ULg INFO0054 Programmation fonctionnelle
 
-; Renvoie le mot suivant à lire dans in, converti en minuscule.
+; Lit dans in, jusqu'au prochain caractère non-alphabétique.
+; Renvoie la liste des caractères alphabétiques lus, en minuscule.
 ; Si le curseur de in est à la fin du fichier, renvoie eof.
 (define read-word
    (lambda (in)
       (let ((c (read-char in)))
          (cond
             ((eof-object? c) c)
-            ((and (char? c) (char-alphabetic? c)) (cons (char-downcase c) (read-word in)))
+            ((char-alphabetic? c) (cons (char-downcase c) (read-word in)))
             (else '())))))
 
 
@@ -20,12 +21,11 @@
 
 ; Si word est un mot, représenté comme une liste de caractères
 ; et trie est un trie, renvoie ce trie, dans lequel on a inséré le mot.
-
 (define insert-word
    (lambda (word trie)
       (cond
          ((null? word) trie)
-         ((null? trie) (list (list (car word) 1 (insert-word (cdr word) '()))))
+         ((null? trie) (list (list (car word) 1 (insert-word (cdr word) '())))) ; nouveau noeud
          (else
             (let ((node (car trie)))
                (if (equal? (car word) (car node))
@@ -33,14 +33,12 @@
                   (cons node (insert-word word (cdr trie)))))))))
 
 
-; Renvoie un trie contenant chaque mot du fichier et sa fréquence d'apparition.
-
+; Renvoie un trie contenant chaque mot de in.
 (define file-to-trie (lambda (in) (file-to-trie* in '())))
 
 
 ; Si in est un fichier et trie un trie,
 ; renvoie le trie fourni en entrée dans lequel sont insérés tous les mots contenus dans in.
-
 (define file-to-trie*
    (lambda (in trie)
       (let ((word (read-word in)))
@@ -52,7 +50,6 @@
 
 ; Si trie est un trie, renvoie une liste de paires pointées dont les car sont les mots du trie,
 ; les cdr le nombre d'occurences de ces mots dans le trie.
-
 (define trie-to-list
    (lambda (trie)
       (trie-to-list* trie '() '())))
@@ -61,7 +58,6 @@
 ; renvoie cette liste dans laquelle sont insérées des paires pointées dont
 ; les car sont toutes les concaténations possibles de word et des mots contenus dans le trie
 ; et les cdr sont les fréquences d'apparition associées à ces mots du trie.
-
 (define trie-to-list*
    (lambda (trie word top)
       (if (null? trie)
@@ -78,13 +74,27 @@
       (if (null? ls) '()
          (cons (list n (cdar ls)) (enumerate-pairs (cdr ls) (+ n 1))))))
 
-(define file (open-input-file "pg4300.txt"))
-(define trie (file-to-trie file))
-(define words (sort (trie-to-list trie) (lambda (x y) (> (cdr x) (cdr y)))))
 
-(parameterize (
-      [plot-x-transform log-transform] [plot-x-ticks (log-ticks)]
-      [plot-y-transform log-transform] [plot-y-ticks (log-ticks)]
-      [plot-x-label "Rang du mot"]
-      [plot-y-label "Fréquence du mot"] )
-   (plot (points (enumerate-pairs words 1))))
+; Renvoie une liste composée des n premiers éléments de ls.
+(define take
+   (lambda (ls n)
+      (cond
+         ((null? ls) '())
+         ((zero? n) '())
+         (else (cons (car ls) (take (cdr ls) (- n 1)))))))
+
+(require plot)
+(plot-new-window? #t)
+
+(define top100
+	(lambda (path)
+		(let ((words (sort (trie-to-list (file-to-trie (open-input-file path))) (lambda (x y) (> (cdr x) (cdr y))))))
+			(begin
+				(parameterize (
+						[plot-x-transform log-transform] [plot-x-ticks (log-ticks)]
+						[plot-y-transform log-transform] [plot-y-ticks (log-ticks)]
+						[plot-x-label "Rang du mot"]
+						[plot-y-label "Fréquence du mot"]
+						[point-sym 'plus])
+					(plot (points (enumerate-pairs words 1))))
+				(take words 100)))))

@@ -10,6 +10,7 @@
 \usepackage{listings}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{tikz}
 
 \newcommand{\titleinfo}{[INFO0054] Programmation Fonctionnelle}
 \title{Programmation Fonctionnelle - Loi de Zipf}
@@ -26,32 +27,114 @@
 
 
 \subsection*{Structures de données}
-
-\paragraph{} Une structure de données assez adaptée au genre de manipulations demandées ici est le \emph{trie}.\\
+\paragraph{}
+Une structure de données assez adaptée au genre de manipulations demandées ici est le \emph{trie}.\\
 Pour ce travail, j'ai choisi de représenter un trie comme une liste de nœuds, 
 et un nœud comme une liste 
-composée d'un caractère (appelé \emph{clef}), d'un entier (appelé \emph{valeur}) et d'un trie. 
-Pour chaque nœud, l'entier associé correspond
-au nombre de chaînes contenues dans le trie passant par ce nœud, et le trie associé est un trie 
-contenant toutes les chaînes commençant par le catactère \emph{clef}. 
-Ainsi, pour un chemin de nœuds dont les clefs sont \verb#s#, \verb#h# et \verb#e# 
-la valeur associée à la clef \verb#e# donne le nombre de chaînes ayant pour préfixe \verb#she#
-qui sont contenues dans le trie.
+composée d'un caractère (appelé \emph{clef}), d'un entier (appelé \emph{valeur}) et d'un trie.
+
+\[
+   trie := (node ~~ node ~~ node ~~ ...) 
+\]
+\[
+   node := (clef ~~ valeur ~~ trie)
+\]
+ 
+Pour chaque trie, les clefs des nœuds sont uniques parmi l'ensemble des caractère alphabétiques 
+minuscules. Un trie a donc un maximum de 26 nodes, si l'on ignore les caractères accentués et autres 
+symboles ésotériques.
+
+Insérer un mot dans un trie consiste à choisir le nœud dont la clef est correspond à la première lettre
+de ce mot, incrémenter la valeur associée à cette clef et enfin insérer le mot privé de sa première lettre
+dans le sous-trie du nœud. Pour chaque noeud $\alpha$ de clef $a$, l'entier associé correspond donc
+au nombre de chaînes contenues dans le trie passant par ce nœud,
+c'est-à-dire le nombre de mots qui ont pour préfixe la chaîne formée par $a$ et les clefs de 
+tous les ancêtres de $\alpha$, 
+et le sous-trie de $\alpha$ contient toutes les mots commençant par ce même préfixe. 
+
 Pour dénoter un mot qui serait préfixe d'un autre (par exemple ``she'' et ``shells'') on utilise une
 valeur-drapeau, ici \verb#eol#, indiquant une fin de mot.
 
-\begin{figure}[H]
-   \centering
-   \includegraphics{stgraph.png}
+En insérant ainsi tous les mots d'un texte donné dans un trie, il suffit de parcourir ce trie et,
+pour chaque nœud dont la clef est \verb#eol#, la valeur donne le nombre d'occurrences d'un mot, déterminé 
+par le chemin parcouru pour atteindre ce nœud.
+
+\paragraph{}
+Voici un petit exemple d'un trie dans lequel on a successivement inséré les mots de la phrase
+``She sells sea shells by the sea shore'' :
+
+\begin {figure}[H]
+\begin{tikzpicture}[level/.style={sibling distance=60mm/#1}]
+\node [circle,draw] {}
+  child {node [circle,draw] {s,6}
+    child {node [circle,draw] {h,3}
+      child {node [circle,draw] {e,2}
+         child{node [circle, draw] {l,1}
+            child{node [circle, draw] {l,1}
+               child{node [circle, draw] {s,1}
+                  child{node {eol,1}}
+                }
+            }
+         }
+         child{node {eol,1}}
+      } 
+      child {node [circle,draw]{o,1}
+         child {node [circle,draw]{r,1}
+            child {node [circle,draw]{e,1}
+               child{node {eol,1}}
+            }
+         }
+      }
+    }
+    child {node [circle,draw] {e,3}
+      child{node [circle, draw] {l,1}
+         child{node [circle, draw] {l,1}
+            child{node [circle, draw] {s,1}
+               child{node {eol,1}}
+            }
+         }
+      }
+      child{node [circle, draw] {a,2}
+         child{node {eol,2}}
+      }
+    }
+  }
+  child {node [circle,draw] {b,1}
+    child {node [circle,draw] {y,1}
+      child{node {eol,1}}
+     }
+  }
+   child{ node [circle,draw] {t,1}
+      child {node [circle, draw] {h,1}
+         child {node [circle, draw] {e,1}
+            child{node {eol,1}}
+         }
+      }
+   }
+;  
+
+\end{tikzpicture}
    \label{fig:trie}
    \caption{Exemple de trie après insertions successives des mots : ``She sells sea shells by the sea shore"}
 \end{figure}
 
-\paragraph{} En insérant ainsi tous les mots d'un texte donné dans un trie, il suffit de parcourir ce trie et,
-pour chaque nœud dont la clef est \verb#eol#, la valeur donne le nombre d'occurences d'un mot, déterminé 
-par le chemin parcouru pour atteindre ce nœud.fdqf 
-u
-fdsf
+\subsection*{Utilisation}
+\paragraph{}
+La fonction résolvant le problème demandé est la fonction \verb#top100#. Elle prend en paramètre 
+unique le chemin du fichier à analyser et elle génère le graphique des fréquences avant de retourner
+une liste de 100 paires pointées de la forme $(mot ~ . ~ frequence)$. 
+
+\subsection*{Choix d'implémentation}
+\begin{description}
+
+\item [Définition d'un mot] J'ai choisi de considérer qu'un mot était toute suite de caractères
+alphabétiques. Ceci exclut notamment les mots composés (\emph{allume-cigare} sera donc décomposé en
+\emph{allume} et \emph{cigare}). J'ai également choisi de ne pas respecter la casse et de considérer que deux mots
+capitalisés différemment sont identiques.
+
+\item []
+
+\end{description}
 
 \end{document}
 
